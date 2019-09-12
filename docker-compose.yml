@@ -1,0 +1,95 @@
+version: "3"
+
+services:
+  consul-server-leader:
+    image: consul:latest
+    container_name: consul-server-leader
+    command: "agent -server -bootstrap -ui -node=consul-server-leader -client=0.0.0.0"
+    environment:
+      - CONSUL_BIND_INTERFACE=eth0
+    ports:
+      - "8500:8500"
+    networks:
+      - microservice
+
+  # consul-server-1:
+  #   image: consul:latest
+  #   container_name: consul-server-1
+  #   command: "agent -server -node=consul-server-1 -join=consul-server-leader -client=0.0.0.0"
+  #   environment:
+  #     - CONSUL_BIND_INTERFACE=eth0
+  #   networks:
+  #     - microservice
+  #   depends_on:
+  #     - "consul-server-leader"
+
+  # consul-server-2:
+  #   image: consul:latest
+  #   container_name: consul-server-2
+  #   command: "agent -server -node=consul-server-2 -join=consul-server-leader -client=0.0.0.0"
+  #   environment:
+  #     - CONSUL_BIND_INTERFACE=eth0
+  #   networks:
+  #     - microservice
+  #   depends_on:
+  #     - "consul-server-leader"
+
+  # consul-client:
+  #   image: consul:latest
+  #   container_name: consul-client
+  #   command: "agent -client -node=consul-client -join=consul-server-leader -client=0.0.0.0"
+  #   environment:
+  #     - CONSUL_BIND_INTERFACE=eth0
+  #   networks:
+  #     - microservice
+  #   depends_on:
+  #     - "consul-server-leader"
+
+  microservice-1:
+    build:
+      context: .
+    container_name: "microservice-1"
+    command: "php bin/hyperf.php start"
+    depends_on:
+      - "consul-server-leader"
+    volumes:
+      - ./www/microservice-1:/var/www
+    networks:
+      - microservice
+    tty: true
+
+  microservice-2:
+    build:
+      context: .
+    container_name: "microservice-2"
+    command: "php bin/hyperf.php start"
+    depends_on:
+      - "consul-server-leader"
+    volumes:
+      - ./www/microservice-2:/var/www
+    networks:
+      - microservice
+    tty: true
+
+  app:
+    build:
+      context: .
+    container_name: "app"
+    command: "php bin/hyperf.php start"
+    depends_on:
+      - "microservice-1"
+    volumes:
+      - ./www/web:/var/www
+    ports:
+      - "9501:9501"
+    networks:
+      - microservice
+    tty: true
+
+networks:
+  microservice:
+    driver: bridge
+
+volumes:
+  microservice:
+    driver: local
