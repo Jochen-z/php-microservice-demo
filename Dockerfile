@@ -3,7 +3,7 @@ FROM hyperf/hyperf:7.2-alpine-cli
 # Change timezone
 RUN set -x; \
     ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime; \
-    echo Asia/Shanghais > /etc/timezone
+    echo "Asia/Shanghai" > /etc/timezone
 
 # Composer
 RUN set -x; \
